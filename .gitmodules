@@ -1,0 +1,9 @@
+[submodule "submodules/VST3_SDK"]
+	path = submodules/VST3_SDK
+	url = https://github.com/steinbergmedia/vst3sdk.git
+[submodule "submodules/JUCE"]
+	path = submodules/JUCE
+	url = https://github.com/juce-framework/JUCE.git
+[submodule "submodules/rt-cqt"]
+	path = submodules/rt-cqt
+	url = https://github.com/jmerkt/rt-cqt.git
