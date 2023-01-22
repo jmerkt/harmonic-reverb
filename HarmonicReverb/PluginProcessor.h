@@ -11,7 +11,7 @@ constexpr unsigned ChannelNumber{ 2 };
 // min, max, default
 constexpr std::tuple<float,float,float> AttackRange{20.f, 1000.f, 50.f};
 constexpr std::tuple<float,float,float> DecayRange{20.f, 10000.f, 1000.f};
-constexpr std::tuple<float,float,float> OctaveOffsetRange{-3.f, 3.f, 2.f};
+constexpr std::tuple<float,float,float> OctaveShiftRange{-3.f, 3.f, 1.f};
 constexpr std::tuple<float,float,float> OctaveMixRange{0.f, 1.f, 0.3f};
 constexpr std::tuple<float,float,float> ColourRange{0.f, 1.f, 0.5f};
 constexpr std::tuple<float,float,float> SparsityRange{0.f, 1.f, 0.5f};
@@ -73,7 +73,7 @@ public:
 
     void setAttack(const double attack);
     void setDecay(const double decay);
-    void setOctaveOffset(const double octaveOffset);
+    void setOctaveShift(const double octaveShift);
     void setOctaveMix(const double octaveMix);
     void setGain(const double gain);
     void setMix(const double mix);
@@ -90,7 +90,7 @@ private:
     juce::AudioProcessorValueTreeState mParameters;
     juce::AudioParameterFloat* mAttackParameter{ nullptr };
     juce::AudioParameterFloat* mDecayParameter{ nullptr };
-    juce::AudioParameterFloat* mOctaveOffsetParameter{ nullptr };
+    juce::AudioParameterFloat* mOctaveShiftParameter{ nullptr };
     juce::AudioParameterFloat* mOctaveMixParameter{ nullptr };
     juce::AudioParameterFloat* mGainParameter{ nullptr };
     juce::AudioParameterFloat* mMixParameter{ nullptr };

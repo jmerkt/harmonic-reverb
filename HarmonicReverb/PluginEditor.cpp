@@ -41,7 +41,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     // Get parameters saved in processor
     const float attackParameter = mParameters.getParameterAsValue("attack").getValue();
     const float decayParameter = mParameters.getParameterAsValue("decay").getValue();
-    const float octaveOffsetParameter = mParameters.getParameterAsValue("octaveOffset").getValue();
+    const float octaveShiftParameter = mParameters.getParameterAsValue("octaveShift").getValue();
     const float octaveMixParameter = mParameters.getParameterAsValue("octaveMix").getValue();
     const float tuningParameter = mParameters.getParameterAsValue("tuning").getValue();
     const float colourParameter = mParameters.getParameterAsValue("colour").getValue();
@@ -51,9 +51,20 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     const float masterParameter = mParameters.getParameterAsValue("master").getValue();
 
     // Controls
+    addAndMakeVisible(mAttackLabel);
+    addAndMakeVisible(mDecayLabel);
+    addAndMakeVisible(mOctaveShiftLabel);
+    addAndMakeVisible(mOctaveMixLabel);
+    addAndMakeVisible(mColourLabel);
+    addAndMakeVisible(mSparsityLabel);
+    addAndMakeVisible(mTuningLabel);
+    addAndMakeVisible(mGainLabel);
+    addAndMakeVisible(mMixLabel);
+    addAndMakeVisible(mMasterLabel);
+
     addAndMakeVisible(mAttackSlider);
     addAndMakeVisible(mDecaySlider);
-    addAndMakeVisible(mOctaveOffsetSlider);
+    addAndMakeVisible(mOctaveShiftSlider);
     addAndMakeVisible(mOctaveMixSlider);
     addAndMakeVisible(mColourSlider);
     addAndMakeVisible(mSparsitySlider);
@@ -61,6 +72,17 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     addAndMakeVisible(mGainSlider);
     addAndMakeVisible(mMixSlider);
     addAndMakeVisible(mMasterSlider);
+
+    mAttackLabel.setText("Attack", juce::dontSendNotification);
+    mDecayLabel.setText("Decay", juce::dontSendNotification);
+    mOctaveShiftLabel.setText("OctaveShift", juce::dontSendNotification);
+    mOctaveMixLabel.setText("OctaveMix", juce::dontSendNotification);
+    mTuningLabel.setText("Tuning", juce::dontSendNotification);
+    mColourLabel.setText("Colour", juce::dontSendNotification);
+    mSparsityLabel.setText("Sparsity", juce::dontSendNotification);
+    mGainLabel.setText("Gain", juce::dontSendNotification);
+    mMixLabel.setText("Mix", juce::dontSendNotification);
+    mMasterLabel.setText("Master", juce::dontSendNotification);
 
     mAttackSlider.setRange(std::get<0>(AttackRange), std::get<1>(AttackRange), 0.01);
     mAttackSlider.setValue(attackParameter, juce::dontSendNotification);
@@ -74,11 +96,11 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     mDecaySlider.onValueChange = [this]{decaySliderChanged();};
     decaySliderChanged();
 
-    mOctaveOffsetSlider.setRange(std::get<0>(OctaveOffsetRange), std::get<1>(OctaveOffsetRange), 0.01);
-    mOctaveOffsetSlider.setValue(octaveOffsetParameter, juce::dontSendNotification);
-    mOctaveOffsetSlider.setTextValueSuffix ("");
-    mOctaveOffsetSlider.onValueChange = [this]{octaveOffsetSliderChanged();};
-    octaveOffsetSliderChanged();
+    mOctaveShiftSlider.setRange(std::get<0>(OctaveShiftRange), std::get<1>(OctaveShiftRange), 0.01);
+    mOctaveShiftSlider.setValue(octaveShiftParameter, juce::dontSendNotification);
+    mOctaveShiftSlider.setTextValueSuffix ("");
+    mOctaveShiftSlider.onValueChange = [this]{octaveShiftSliderChanged();};
+    octaveShiftSliderChanged();
 
     mOctaveMixSlider.setRange(std::get<0>(OctaveMixRange), std::get<1>(OctaveMixRange), 0.01);
     mOctaveMixSlider.setValue(octaveMixParameter, juce::dontSendNotification);
@@ -166,7 +188,10 @@ void AudioPluginAudioProcessorEditor::resized()
     const float xPerControl = b.getWidth() / nControlsPerRow;
     const float yPerControl = (b.getHeight() - headingYFrac * b.getHeight()) / nControlRows;
     juce::Slider* sliderArray[N_CONTROLS] = {&mAttackSlider, &mDecaySlider, &mTuningSlider, &mColourSlider, &mMixSlider,
-                                                &mOctaveOffsetSlider, &mOctaveMixSlider, &mSparsitySlider, &mGainSlider, &mMasterSlider};
+                                                &mOctaveShiftSlider, &mOctaveMixSlider, &mSparsitySlider, &mGainSlider, &mMasterSlider};
+    juce::Label* labelArray[N_CONTROLS] = {&mAttackLabel, &mDecayLabel, &mTuningLabel, &mColourLabel, &mMixLabel,
+                                                &mOctaveShiftLabel, &mOctaveMixLabel, &mSparsityLabel, &mGainLabel, &mMasterLabel};
+
     size_t count = 0u;
     for(size_t row = 0u; row < N_ROWS; row++)
     {
@@ -178,7 +203,13 @@ void AudioPluginAudioProcessorEditor::resized()
             controlB.setTop(static_cast<float>(row) * yPerControl);
             controlB.setBottom(static_cast<float>(row + 1) * yPerControl);
 
-            sliderArray[count]->setBounds(controlB.toNearestIntEdges());
+            auto labelB = controlB;
+            auto sliderB = controlB;
+            labelB = controlB.withTrimmedBottom(controlB.getHeight() / 2.f);
+            sliderB = controlB.withTrimmedTop(controlB.getHeight() / 2.f);
+
+            labelArray[count]->setBounds(labelB.toNearestIntEdges());
+            sliderArray[count]->setBounds(sliderB.toNearestIntEdges());
             count++;
         }
     }
@@ -196,9 +227,9 @@ void AudioPluginAudioProcessorEditor::decaySliderChanged()
     processorRef.setDecay(mDecaySlider.getValue());
 }
 
-void AudioPluginAudioProcessorEditor::octaveOffsetSliderChanged()
+void AudioPluginAudioProcessorEditor::octaveShiftSliderChanged()
 {
-    processorRef.setOctaveOffset(mOctaveOffsetSlider.getValue());
+    processorRef.setOctaveShift(mOctaveShiftSlider.getValue());
 }
 
 void AudioPluginAudioProcessorEditor::octaveMixSliderChanged()

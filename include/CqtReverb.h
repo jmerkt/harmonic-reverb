@@ -27,7 +27,7 @@ public:
     void setAttack(const double attack);
     void setDecay(const double decay);
     void setTuning(const double tuning);
-    void setOctaveOffset(const double octaveOffset);
+    void setOctaveShift(const double octaveShift);
     void setOctaveMix(const double octaveMix);
     void setColour(const double colour);
     void setSparsity(const double sparsity);
@@ -56,16 +56,24 @@ private:
     std::vector<std::complex<double>> mSynthBuffer[OctaveNumber][B];
 
     double mGainSum[OctaveNumber][B];
+    double mGainSumShifted[OctaveNumber][B];
+    double mGainSumMixed[OctaveNumber][B];
     double mOctaveMeans[OctaveNumber];
 
     // Controlable parameters
     double mAttack{ 50. };
     double mDecay{ 1000. };
     double mTuning{ 440. };
-    double mOctaveOffset{ 1. };
+    double mOctaveShift{ 1. };
     double mOctaveMix{ 0.3 };
     double mColour{ 1. };
     double mSparsity{ 1. };
+
+    // Octave shift
+	int mLowerOctaveShift{ 0 };
+	int mHigherOctaveShift{ 0 };
+	double mLowerShiftFrac{ 0. };
+	double mHigherShiftFrac{ 0. };
 };
 
 template <unsigned B, unsigned OctaveNumber>
@@ -128,6 +136,8 @@ inline void CqtReverb<B, OctaveNumber>::processBlock(double* const data, const i
             for(unsigned i_tone = 0u; i_tone < B; i_tone++)
             {
                 mGainSum[i_octave][i_tone] = 0.;
+                mGainSumShifted[i_octave][i_tone] = 0.;
+                mGainSumMixed[i_octave][i_tone] = 0.;
             }
         }
         
@@ -173,18 +183,44 @@ inline void CqtReverb<B, OctaveNumber>::processBlock(double* const data, const i
                     mGainSum[i_octave][i_tone] += mCqtValues[i_octave][i_tone];
             }
         }
-        // TODO: Octaves, etc all adds to GainSum
+
+        // Octave shift and mixing
+        for (int i_octave = 0; i_octave < OctaveNumber; i_octave++)
+        {
+            for (int i_tone = 0; i_tone < B; i_tone++)
+            {
+                mGainSumShifted[i_octave][i_tone] = 0.;
+            }
+        }
+        for (int i_octave = 0; i_octave < OctaveNumber; i_octave++)
+        {
+            for (int i_tone = 0; i_tone < B; i_tone++) 
+            {
+                const int shiftOctaveLow = Cqt::Clip<int>(i_octave + mLowerOctaveShift, 0, OctaveNumber - 1);
+                const int shiftOctaveHigh = Cqt::Clip<int>(i_octave + mHigherOctaveShift, 0, OctaveNumber - 1);
+                mGainSumShifted[i_octave][i_tone] += mGainSum[shiftOctaveLow][i_tone] * mLowerShiftFrac;
+                mGainSumShifted[i_octave][i_tone] += mGainSum[shiftOctaveHigh][i_tone] * mHigherShiftFrac;
+            }
+        }
+        for (int i_octave = 0; i_octave < OctaveNumber; i_octave++)
+        {
+            for (int i_tone = 0; i_tone < B; i_tone++)
+            {
+                mGainSumMixed[i_octave][i_tone] = mGainSum[i_octave][i_tone] * (1. - mOctaveMix) + mGainSumShifted[i_octave][i_tone] * mOctaveMix;
+            }
+        }
 
 
+        // Set smoother's target values
         for(unsigned i_octave = 0u; i_octave < OctaveNumber; i_octave++)
         {
             for(unsigned i_tone = 0u; i_tone < B; i_tone++)
             {
-                mSmoothedFloats[i_octave][i_tone].setTargetValue(mGainSum[i_octave][i_tone]);
+                mSmoothedFloats[i_octave][i_tone].setTargetValue(mGainSumMixed[i_octave][i_tone]);
             }
         }
 
-        // process cqt data 
+        // Process cqt data 
         for(unsigned i_octave = 0u; i_octave < OctaveNumber; i_octave++)
         {
             // TODO Optimization:
@@ -270,10 +306,22 @@ inline void CqtReverb<B, OctaveNumber>::setTuning(const double tuning)
 }
 
 template <unsigned B, unsigned OctaveNumber>
-inline void CqtReverb<B, OctaveNumber>::setOctaveOffset(const double octaveOffset){}
+inline void CqtReverb<B, OctaveNumber>::setOctaveShift(const double octaveShift)
+{
+    mOctaveShift = octaveShift;
+    const double shiftFloor = std::floor(mOctaveShift);
+	const double shiftCeil = shiftFloor + 1.;
+	mLowerShiftFrac = 1. - (mOctaveShift - shiftFloor);
+	mHigherShiftFrac = 1. - mLowerShiftFrac;
+	mLowerOctaveShift = static_cast<int>(shiftFloor);
+	mHigherOctaveShift = static_cast<int>(shiftCeil);
+}
 
 template <unsigned B, unsigned OctaveNumber>
-inline void CqtReverb<B, OctaveNumber>::setOctaveMix(const double octaveMix){}
+inline void CqtReverb<B, OctaveNumber>::setOctaveMix(const double octaveMix)
+{
+    mOctaveMix = octaveMix;
+}
 
 template <unsigned B, unsigned OctaveNumber>
 inline void CqtReverb<B, OctaveNumber>::setColour(const double colour){}

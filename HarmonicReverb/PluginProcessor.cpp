@@ -16,7 +16,7 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
             std::make_unique<juce::AudioParameterFloat> ("attack", "Attack", std::get<0>(AttackRange), std::get<1>(AttackRange), std::get<2>(AttackRange)),
             std::make_unique<juce::AudioParameterFloat> ("decay", "Decay", std::get<0>(DecayRange), std::get<1>(DecayRange), std::get<2>(DecayRange)),
             std::make_unique<juce::AudioParameterFloat> ("tuning", "Tuning", std::get<0>(TuningRange), std::get<1>(TuningRange), std::get<2>(TuningRange)),
-            std::make_unique<juce::AudioParameterFloat> ("octaveOffset", "OctaveOffset", std::get<0>(OctaveOffsetRange), std::get<1>(OctaveOffsetRange), std::get<2>(OctaveOffsetRange)),
+            std::make_unique<juce::AudioParameterFloat> ("octaveShift", "OctaveShift", std::get<0>(OctaveShiftRange), std::get<1>(OctaveShiftRange), std::get<2>(OctaveShiftRange)),
             std::make_unique<juce::AudioParameterFloat> ("octaveMix", "OctaveMix", std::get<0>(OctaveMixRange), std::get<1>(OctaveMixRange), std::get<2>(OctaveMixRange)),
             std::make_unique<juce::AudioParameterFloat> ("gain", "Gain", std::get<0>(GainRange), std::get<1>(GainRange), std::get<2>(GainRange)),
             std::make_unique<juce::AudioParameterFloat> ("mix", "Mix", std::get<0>(MixRange), std::get<1>(MixRange), std::get<2>(MixRange)),
@@ -27,7 +27,7 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
 {
     mAttackParameter = dynamic_cast<juce::AudioParameterFloat*>(mParameters.getParameter("attack"));
     mDecayParameter = dynamic_cast<juce::AudioParameterFloat*>(mParameters.getParameter("decay"));
-    mOctaveOffsetParameter = dynamic_cast<juce::AudioParameterFloat*>(mParameters.getParameter("octaveOffset"));
+    mOctaveShiftParameter = dynamic_cast<juce::AudioParameterFloat*>(mParameters.getParameter("octaveShift"));
     mOctaveMixParameter = dynamic_cast<juce::AudioParameterFloat*>(mParameters.getParameter("octaveMix"));
     mTuningParameter = dynamic_cast<juce::AudioParameterFloat*>(mParameters.getParameter("tuning"));
     mColourParameter = dynamic_cast<juce::AudioParameterFloat*>(mParameters.getParameter("colour"));
@@ -259,12 +259,12 @@ void AudioPluginAudioProcessor::setDecay(const double decay)
     }
 }
 
-void AudioPluginAudioProcessor::setOctaveOffset(const double octaveOffset)
+void AudioPluginAudioProcessor::setOctaveShift(const double octaveShift)
 {
-    *mOctaveOffsetParameter = octaveOffset;
+    *mOctaveShiftParameter = octaveShift;
     for(unsigned i_channel = 0u; i_channel < ChannelNumber; i_channel++)
     {
-        mCqtReverb[i_channel].setOctaveOffset(octaveOffset);
+        mCqtReverb[i_channel].setOctaveShift(octaveShift);
     }
 }
 

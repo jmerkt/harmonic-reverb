@@ -24,10 +24,21 @@ private:
     juce::Label mVersionLabel;
     juce::Label mWebsiteLabel;
 
+    juce::Label mAttackLabel;
+    juce::Label mDecayLabel;
+    juce::Label mTuningLabel;
+    juce::Label mOctaveShiftLabel;
+    juce::Label mOctaveMixLabel;
+    juce::Label mColourLabel;
+    juce::Label mSparsityLabel;
+    juce::Label mGainLabel;
+    juce::Label mMixLabel;
+    juce::Label mMasterLabel;
+
     juce::Slider mAttackSlider;
     juce::Slider mDecaySlider;
     juce::Slider mTuningSlider;
-    juce::Slider mOctaveOffsetSlider;
+    juce::Slider mOctaveShiftSlider;
     juce::Slider mOctaveMixSlider;
     juce::Slider mColourSlider;
     juce::Slider mSparsitySlider;
@@ -39,7 +50,7 @@ private:
 
     void attackSliderChanged();
     void decaySliderChanged();
-    void octaveOffsetSliderChanged();
+    void octaveShiftSliderChanged();
     void octaveMixSliderChanged();
     void colourSliderChanged();
     void sparsitySliderChanged();
