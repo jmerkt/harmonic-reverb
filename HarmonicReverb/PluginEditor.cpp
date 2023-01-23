@@ -143,6 +143,16 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     mMasterSlider.setTextValueSuffix ("");
     mMasterSlider.onValueChange = [this]{masterSliderChanged();};
     masterSliderChanged();
+
+    // Spectral display
+    addAndMakeVisible(mMagnitudesComponent);
+    mMagnitudesComponent.setRangeMax(10.);
+    mMagnitudesComponent.setRangeMin(-30.);
+
+    // Tooltips
+    mFrequencyTooltip.setMillisecondsBeforeTipAppears(100);
+    addAndMakeVisible(mFrequencyTooltip);
+
     
 }
 
@@ -162,6 +172,8 @@ void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g)
 void AudioPluginAudioProcessorEditor::resized()
 {
     const float headingYFrac = 0.08f;
+    const float spectrumYFrac = 0.4f;
+    const float controlYFrac = 1. - (headingYFrac + spectrumYFrac);
     auto b = getLocalBounds().toFloat();
 
     auto headingRect = b.withTrimmedTop((1.f - headingYFrac) * b.getHeight());
@@ -177,16 +189,21 @@ void AudioPluginAudioProcessorEditor::resized()
     mVersionLabel.setFont (juce::Font (WebsiteSize * labelScaling, juce::Font::bold));
     mWebsiteLabel.setFont (juce::Font (WebsiteSize * labelScaling, juce::Font::bold));
 
+    // Spectrum
+    auto spectrumRect = b;
+    spectrumRect.setTop(b.getHeight() * controlYFrac);
+    spectrumRect.setBottom(b.getHeight() - b.getHeight() * headingYFrac);
+    mMagnitudesComponent.setBounds(spectrumRect.toNearestIntEdges());
+
     // Controls
     constexpr size_t N_CONTROLS = 10u;
     constexpr size_t N_ROWS = 2u;
     constexpr size_t N_COLUMNS= N_CONTROLS / N_ROWS;
-    const float controlY = 1.f - headingYFrac;
     const float nControls = static_cast<float>(N_CONTROLS);
     const float nControlRows = static_cast<float>(N_ROWS);
     const float nControlsPerRow = static_cast<float>(N_COLUMNS);
     const float xPerControl = b.getWidth() / nControlsPerRow;
-    const float yPerControl = (b.getHeight() - headingYFrac * b.getHeight()) / nControlRows;
+    const float yPerControl = (b.getHeight() * controlYFrac) / nControlRows;
     juce::Slider* sliderArray[N_CONTROLS] = {&mAttackSlider, &mDecaySlider, &mTuningSlider, &mColourSlider, &mMixSlider,
                                                 &mOctaveShiftSlider, &mOctaveMixSlider, &mSparsitySlider, &mGainSlider, &mMasterSlider};
     juce::Label* labelArray[N_CONTROLS] = {&mAttackLabel, &mDecayLabel, &mTuningLabel, &mColourLabel, &mMixLabel,
@@ -198,6 +215,7 @@ void AudioPluginAudioProcessorEditor::resized()
         for(size_t column = 0u; column < N_COLUMNS; column++)
         {
             auto controlB = b;
+            controlB = controlB.withTrimmedBottom((1. - controlYFrac) * b.getHeight());
             controlB.setLeft(static_cast<float>(column) * xPerControl);
             controlB.setRight(static_cast<float>(column + 1) * xPerControl);
             controlB.setTop(static_cast<float>(row) * yPerControl);
@@ -214,6 +232,8 @@ void AudioPluginAudioProcessorEditor::resized()
         }
     }
     
+    // Tooltip
+    mFrequencyTooltip.setBounds(b.toNearestIntEdges());
     
 }
 

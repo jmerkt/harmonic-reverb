@@ -3,6 +3,7 @@
 #include "PluginProcessor.h"
 
 #include "../include/gui/OtherLookAndFeel.h"
+#include "../submodules/cqt-analyzer/include/gui/MagnitudesComponent.h"
 
 //==============================================================================
 class AudioPluginAudioProcessorEditor  : public juce::AudioProcessorEditor
@@ -47,6 +48,10 @@ private:
     juce::Slider mMasterSlider;
 
     OtherLookAndFeel mOtherLookAndFeel;
+
+    juce::TooltipWindow mFrequencyTooltip;
+
+    MagnitudesComponent<BinsPerOctave, OctaveNumber> mMagnitudesComponent{ processorRef };
 
     void attackSliderChanged();
     void decaySliderChanged();

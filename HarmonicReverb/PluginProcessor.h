@@ -4,7 +4,7 @@
 #include "../include/CqtReverb.h"
 #include "../include/SmoothedFloat.h"
 
-constexpr unsigned BinsPerOctave{ 48 };
+constexpr unsigned BinsPerOctave{ 12 };
 constexpr unsigned OctaveNumber{ 9 };
 constexpr unsigned ChannelNumber{ 2 };
 
@@ -69,7 +69,7 @@ public:
     //==============================================================================
     double mCqtDataStorage[OctaveNumber][BinsPerOctave]; // For spectral display
     double mKernelFreqs[OctaveNumber][BinsPerOctave]; // For spectral display
-    bool mNewKernelFreqs{false}; // For spectral display
+    bool mNewKernelFreqs{ false }; // For spectral display
 
     void setAttack(const double attack);
     void setDecay(const double decay);

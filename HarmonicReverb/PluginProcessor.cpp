@@ -35,6 +35,16 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     mGainParameter = dynamic_cast<juce::AudioParameterFloat*>(mParameters.getParameter("gain"));
     mMixParameter = dynamic_cast<juce::AudioParameterFloat*>(mParameters.getParameter("mix"));
     mMasterParameter = dynamic_cast<juce::AudioParameterFloat*>(mParameters.getParameter("master"));
+
+    for(unsigned i_octave = 0u; i_octave < OctaveNumber; i_octave++)
+    {
+        for(unsigned i_tone = 0u; i_tone < BinsPerOctave; i_tone++)
+        {
+            mCqtDataStorage[i_octave][i_tone] = 0.; 
+            mKernelFreqs[i_octave][i_tone] = 0.; 
+        }
+    }
+    
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
@@ -188,6 +198,17 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         channelDataR[i_sample] = (mix * mCqtSampleBuffer[1][i_sample] + (1. - mix) * channelDataR[i_sample]) * master;
     }
 
+
+    // Spectral display
+    unsigned i_channel = 0u;
+    for(unsigned i_octave = 0u; i_octave < OctaveNumber; i_octave++)
+    {
+        auto octaveValues = mCqtReverb[i_channel].getOctaveValues(i_octave);
+        for(unsigned i_tone = 0u; i_tone < BinsPerOctave; i_tone++)
+        {
+            mCqtDataStorage[i_octave][i_tone] = octaveValues[i_tone];
+        }
+    }
 }
 
 // void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<double>& buffer,

@@ -24,6 +24,8 @@ public:
 
     void processBlock(double* const data, const int nSamples);
 
+    const double* getOctaveValues(const int octave){ return mGainsIllustration[octave]; };
+
     void setAttack(const double attack);
     void setDecay(const double decay);
     void setTuning(const double tuning);
@@ -59,6 +61,7 @@ private:
     double mGainSumShifted[OctaveNumber][B];
     double mGainSumMixed[OctaveNumber][B];
     double mOctaveMeans[OctaveNumber];
+    double mGainsIllustration[OctaveNumber][B];
 
     // Controlable parameters
     double mAttack{ 50. };
@@ -138,6 +141,7 @@ inline void CqtReverb<B, OctaveNumber>::processBlock(double* const data, const i
                 mGainSum[i_octave][i_tone] = 0.;
                 mGainSumShifted[i_octave][i_tone] = 0.;
                 mGainSumMixed[i_octave][i_tone] = 0.;
+                mGainsIllustration[i_octave][i_tone] = 0.;
             }
         }
         
@@ -267,6 +271,17 @@ inline void CqtReverb<B, OctaveNumber>::processBlock(double* const data, const i
     {
         data[i_sample] = mOutputData[i_sample];
     }
+
+
+    // Spectral display
+    for(unsigned i_octave = 0u; i_octave < OctaveNumber; i_octave++)
+    {
+        for(unsigned i_tone = 0u; i_tone < B; i_tone++)
+        {
+            mGainsIllustration[i_octave][i_tone] = mSmoothedFloats[i_octave][i_tone].getCurrentValue();
+        }
+    }
+
 
     // return mOutputData.data();
     //const double* cqtOut = mCqt.outputBlock(nSamples); 

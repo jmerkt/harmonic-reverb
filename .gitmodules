@@ -7,3 +7,6 @@
 [submodule "submodules/rt-cqt"]
 	path = submodules/rt-cqt
 	url = https://github.com/jmerkt/rt-cqt.git
+[submodule "submodules/cqt-analyzer"]
+	path = submodules/cqt-analyzer
+	url = https://github.com/jmerkt/cqt-analyzer.git
