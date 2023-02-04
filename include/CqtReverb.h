@@ -10,7 +10,7 @@ constexpr size_t WavetableSize{512u};
 
 // Parameters later
 constexpr double MaxToneThresholdFactor{0.25}; // sparsity
-constexpr double GlobalMaxThresholdFactor{0.05};
+constexpr double GlobalMaxThresholdFactor{0.15};
 constexpr double OctaveMeanThresholdFactor{2.0}; // sparsity
 
 template <unsigned B, unsigned OctaveNumber>
@@ -46,7 +46,8 @@ private:
     size_t mInputDataCounter;
 	size_t mOutputDataCounter;
 
-    SmoothedFloatUpDown<double> mSmoothedFloats[OctaveNumber][B];
+    //SmoothedFloatUpDown<double, SmoothingTypes::Linear> mSmoothedFloats[OctaveNumber][B];
+    OnePoleUpDown<double> mSmoothedFloats[OctaveNumber][B];
 
     double mCqtValues[OctaveNumber][B];
     std::vector<double> mModulationData[OctaveNumber][B];
@@ -60,12 +61,18 @@ private:
     double mGainSum[OctaveNumber][B];
     double mGainSumShifted[OctaveNumber][B];
     double mGainSumMixed[OctaveNumber][B];
-    double mOctaveMeans[OctaveNumber];
     double mGainsIllustration[OctaveNumber][B];
 
+    // Thresholding
+    double mOctaveMean[OctaveNumber];
+    double mOctaveMax[OctaveNumber];
+    double mOctaveMeanCurrent[OctaveNumber];
+    double mOctaveMaxCurrent[OctaveNumber];
+
+
     // Controlable parameters
-    double mAttack{ 50. };
-    double mDecay{ 1000. };
+    double mAttack{ .25 };
+    double mDecay{ 0.05 };
     double mTuning{ 440. };
     double mOctaveShift{ 1. };
     double mOctaveMix{ 0.3 };
@@ -101,7 +108,7 @@ inline void CqtReverb<B, OctaveNumber>::init(const double samplerate, const int 
         for(unsigned i_tone = 0u; i_tone < B; i_tone++)
         {
             mSmoothedFloats[i_octave][i_tone].init(octaveRate);
-            mSmoothedFloats[i_octave][i_tone].setSmoothingTime(mAttack, mDecay);
+            mSmoothedFloats[i_octave][i_tone].setSmoothingFactors(mAttack, mDecay);
 
             mOscillators[i_octave][i_tone].init(octaveRate, &mStaticWavetable);
             mOscillators[i_octave][i_tone].setFrequency(binFreqs[i_tone]);
@@ -145,46 +152,67 @@ inline void CqtReverb<B, OctaveNumber>::processBlock(double* const data, const i
             }
         }
         
-        // Global max
+        // Parameters for thresholding
         double globalMax = 0.;
+        double globalMaxCurrent = 0.;
         for(unsigned i_octave = 0u; i_octave < OctaveNumber; i_octave++)
         {
             for(unsigned i_tone = 0u; i_tone < B; i_tone++)
             {
                 if(mCqtValues[i_octave][i_tone] > globalMax)
                     globalMax = mCqtValues[i_octave][i_tone];
+                if(mSmoothedFloats[i_octave][i_tone].getCurrentValue() > globalMaxCurrent)
+                    globalMaxCurrent = mSmoothedFloats[i_octave][i_tone].getCurrentValue();
             }
         }
         for(unsigned i_octave = 0u; i_octave < OctaveNumber; i_octave++)
         {
             for(unsigned i_tone = 0u; i_tone < B; i_tone++)
             {
-                mOctaveMeans[i_octave] += mCqtValues[i_octave][i_tone];
+                mOctaveMean[i_octave] += mCqtValues[i_octave][i_tone];
+                mOctaveMeanCurrent[i_octave] += mSmoothedFloats[i_octave][i_tone].getCurrentValue();
             }
-            mOctaveMeans[i_octave] *= mOneDivB;
+            mOctaveMean[i_octave] *= mOneDivB;
+            mOctaveMeanCurrent[i_octave] *= mOneDivB;
+        }
+        for(unsigned i_octave = 0u; i_octave < OctaveNumber; i_octave++)
+        {
+            mOctaveMax[i_octave] = 0.;
+            mOctaveMaxCurrent[i_octave] = 0.;
+            for(unsigned i_tone = 0u; i_tone < B; i_tone++)
+            {
+                if(mCqtValues[i_octave][i_tone] > mOctaveMax[i_octave])
+                    mOctaveMax[i_octave] = mCqtValues[i_octave][i_tone];
+                if(mSmoothedFloats[i_octave][i_tone].getCurrentValue() > mOctaveMaxCurrent[i_octave])
+                    mOctaveMaxCurrent[i_octave] = mSmoothedFloats[i_octave][i_tone].getCurrentValue();
+            }
         }
 
-        // Mean per octave, const int blockSize
+        // Thresholding and summation of gains
         for(unsigned i_octave = 0u; i_octave < OctaveNumber; i_octave++)
         {
-            double max_magnitude = 0.;
-            for(unsigned i_tone = 0u; i_tone < B; i_tone++)
-            {
-                if(mCqtValues[i_octave][i_tone] > max_magnitude)
-                    max_magnitude = mCqtValues[i_octave][i_tone];
-            }
-            const double threshold = max_magnitude * MaxToneThresholdFactor;
+            const double threshold = mOctaveMax[i_octave] * MaxToneThresholdFactor;
             const double globalMaxThreshold = globalMax * GlobalMaxThresholdFactor;
-            const double octaveMeanTreshold = mOctaveMeans[i_octave] * OctaveMeanThresholdFactor;
+            const double octaveMeanTreshold = mOctaveMean[i_octave] * OctaveMeanThresholdFactor;
+
+            const double thresholdCurrent = mOctaveMaxCurrent[i_octave] * MaxToneThresholdFactor;
+            const double globalMaxThresholdCurrent = globalMaxCurrent * GlobalMaxThresholdFactor;
+            const double octaveMeanTresholdCurrent = mOctaveMeanCurrent[i_octave] * OctaveMeanThresholdFactor;
+
             for(unsigned i_tone = 0u; i_tone < B; i_tone++)
             {
                 if
                 (
                 mCqtValues[i_octave][i_tone] > threshold && 
                 mCqtValues[i_octave][i_tone] > globalMaxThreshold &&
-                mCqtValues[i_octave][i_tone] > octaveMeanTreshold
+                mCqtValues[i_octave][i_tone] > octaveMeanTreshold &&
+                mCqtValues[i_octave][i_tone] > thresholdCurrent && 
+                mCqtValues[i_octave][i_tone] > globalMaxThresholdCurrent &&
+                mCqtValues[i_octave][i_tone] > octaveMeanTresholdCurrent
                 )
+                {
                     mGainSum[i_octave][i_tone] += mCqtValues[i_octave][i_tone];
+                }      
             }
         }
 
@@ -227,9 +255,6 @@ inline void CqtReverb<B, OctaveNumber>::processBlock(double* const data, const i
         // Process cqt data 
         for(unsigned i_octave = 0u; i_octave < OctaveNumber; i_octave++)
         {
-            // TODO Optimization:
-            // - only process tone selection?
-
             const size_t nSamplesOctave = mCqt.getSamplesToProcess(i_octave);
             CircularBuffer<std::complex<double>>* octaveCqtBuffer = mCqt.getOctaveCqtBuffer(i_octave);
 
@@ -272,7 +297,6 @@ inline void CqtReverb<B, OctaveNumber>::processBlock(double* const data, const i
         data[i_sample] = mOutputData[i_sample];
     }
 
-
     // Spectral display
     for(unsigned i_octave = 0u; i_octave < OctaveNumber; i_octave++)
     {
@@ -281,10 +305,6 @@ inline void CqtReverb<B, OctaveNumber>::processBlock(double* const data, const i
             mGainsIllustration[i_octave][i_tone] = mSmoothedFloats[i_octave][i_tone].getCurrentValue();
         }
     }
-
-
-    // return mOutputData.data();
-    //const double* cqtOut = mCqt.outputBlock(nSamples); 
 }
 
 template <unsigned B, unsigned OctaveNumber>
@@ -295,7 +315,7 @@ inline void CqtReverb<B, OctaveNumber>::setAttack(const double attack)
         {
             for(unsigned i_tone = 0u; i_tone < B; i_tone++)
             {
-                mSmoothedFloats[i_octave][i_tone].setSmoothingTime(mAttack, mDecay);
+                mSmoothedFloats[i_octave][i_tone].setSmoothingFactors(mAttack, mDecay);
             }
         }
 }
@@ -308,7 +328,7 @@ inline void CqtReverb<B, OctaveNumber>::setDecay(const double decay)
         {
             for(unsigned i_tone = 0u; i_tone < B; i_tone++)
             {
-                mSmoothedFloats[i_octave][i_tone].setSmoothingTime(mAttack, mDecay);
+                mSmoothedFloats[i_octave][i_tone].setSmoothingFactors(mAttack, mDecay);
             }
         }
 }
