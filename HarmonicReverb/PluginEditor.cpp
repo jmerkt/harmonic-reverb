@@ -84,12 +84,14 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     mMixLabel.setText("Mix", juce::dontSendNotification);
     mMasterLabel.setText("Master", juce::dontSendNotification);
 
+    mAttackSlider.setSkewFactor(10.);
     mAttackSlider.setRange(std::get<0>(AttackRange), std::get<1>(AttackRange), 0.0001);
     mAttackSlider.setValue(attackParameter, juce::dontSendNotification);
     mAttackSlider.setTextValueSuffix ("");
     mAttackSlider.onValueChange = [this]{attackSliderChanged();};
     attackSliderChanged();
 
+    mDecaySlider.setSkewFactor(10.);
     mDecaySlider.setRange(std::get<0>(DecayRange), std::get<1>(DecayRange), 0.0001);
     mDecaySlider.setValue(decayParameter, juce::dontSendNotification);
     mDecaySlider.setTextValueSuffix ("");

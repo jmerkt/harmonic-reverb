@@ -9,12 +9,12 @@ constexpr unsigned OctaveNumber{ 9 };
 constexpr unsigned ChannelNumber{ 2 };
 
 // min, max, default
-constexpr std::tuple<float,float,float> AttackRange{0.f, 1.f, 0.01f};
-constexpr std::tuple<float,float,float> DecayRange{0.f, 1.f, 0.001f};
+constexpr std::tuple<float,float,float> AttackRange{0.f, 1.f, 0.9f};
+constexpr std::tuple<float,float,float> DecayRange{0.f, 1.f, 0.999f};
 constexpr std::tuple<float,float,float> OctaveShiftRange{-3.f, 3.f, 1.f};
 constexpr std::tuple<float,float,float> OctaveMixRange{0.f, 1.f, 0.3f};
-constexpr std::tuple<float,float,float> ColourRange{0.f, 1.f, 0.5f};
-constexpr std::tuple<float,float,float> SparsityRange{0.f, 1.f, 0.5f};
+constexpr std::tuple<float,float,float> ColourRange{-1.f, 1.f, 0.0f};
+constexpr std::tuple<float,float,float> SparsityRange{0.f, 10.f, 1.0f};
 constexpr std::tuple<float,float,float> TuningRange{415.305f, 466.164f, 440.f};
 constexpr std::tuple<float,float,float> GainRange{0.f, 5.f, 1.};
 constexpr std::tuple<float,float,float> MixRange{0.f, 1.f, 0.3f};
