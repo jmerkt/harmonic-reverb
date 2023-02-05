@@ -1,2 +1,6 @@
+# WIP
+Everything under development. Not ready yet.
+
 # HarmonicReverb
-Reverb plugin operating in the siliding constant q domain.
+Aims to be a reverb plugin operating in the siliding constant q domain.
+Open source re-implementation of my [old plugin](https://www.chromadsp.com/harmonicreverb/) with new engine operating in a sliding fashion.
