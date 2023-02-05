@@ -16,9 +16,9 @@ constexpr std::tuple<float,float,float> OctaveMixRange{0.f, 1.f, 0.3f};
 constexpr std::tuple<float,float,float> ColourRange{-1.f, 1.f, 0.0f};
 constexpr std::tuple<float,float,float> SparsityRange{0.f, 10.f, 1.0f};
 constexpr std::tuple<float,float,float> TuningRange{415.305f, 466.164f, 440.f};
-constexpr std::tuple<float,float,float> GainRange{0.f, 5.f, 1.};
+constexpr std::tuple<float,float,float> GainRange{-20.f, 20.f, 0.f};
 constexpr std::tuple<float,float,float> MixRange{0.f, 1.f, 0.3f};
-constexpr std::tuple<float,float,float> MasterRange{0.f, 5.f, 1.};
+constexpr std::tuple<float,float,float> MasterRange{-20.f, 20.f, 0.f};
 
 
 // TODO:
@@ -98,6 +98,11 @@ private:
     juce::AudioParameterFloat* mColourParameter{ nullptr };
     juce::AudioParameterFloat* mSparsityParameter{ nullptr };
     juce::AudioParameterFloat* mTuningParameter{ nullptr };
+
+    SmoothedFloat<double> mGain;
+    SmoothedFloat<double> mMaster;
+    SmoothedFloat<double> mWet;
+    SmoothedFloat<double> mDry;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessor)

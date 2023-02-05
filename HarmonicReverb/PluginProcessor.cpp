@@ -131,6 +131,25 @@ void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
         mCqtReverb[c].init(sampleRate, samplesPerBlock);
         mCqtSampleBuffer[c].resize(samplesPerBlock, 0.);
     }
+    mGain.init(sampleRate);
+    mMaster.init(sampleRate);
+    mWet.init(sampleRate);
+    mDry.init(sampleRate);
+
+    mGain.setSmoothingTime(20.);
+    mMaster.setSmoothingTime(20.);
+    mWet.setSmoothingTime(20.);
+    mDry.setSmoothingTime(20.);
+
+    for(unsigned i_octave = 0u; i_octave < OctaveNumber; i_octave++)
+    {
+        auto octaveBinFreqs = mCqtReverb[0].getOctaveBinFreqs(i_octave);
+        for(unsigned i_tone = 0u; i_tone < BinsPerOctave; i_tone++)
+        {
+            mKernelFreqs[i_octave][i_tone] = octaveBinFreqs[i_tone]; 
+        }
+    }
+    mNewKernelFreqs = true;
 }
 
 void AudioPluginAudioProcessor::releaseResources()
@@ -175,15 +194,11 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     for (auto i_channel = totalNumInputChannels; i_channel < totalNumOutputChannels; ++i_channel)
         buffer.clear (i_channel, 0, buffer.getNumSamples());
 
-
-    const double gain = *mGainParameter;
-    const double mix = *mMixParameter;
-    const double master = *mMasterParameter;
-
     auto* channelDataL = buffer.getWritePointer (0);
     auto* channelDataR = buffer.getWritePointer (1); 
     for(int i_sample = 0; i_sample < buffer.getNumSamples(); i_sample++)
     {
+        const double gain = mGain.getNextValue();
         mCqtSampleBuffer[0][i_sample] = static_cast<double>(channelDataL[i_sample]) * gain;
         mCqtSampleBuffer[1][i_sample] = static_cast<double>(channelDataR[i_sample]) * gain;
     }
@@ -194,10 +209,14 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     }
     for(int i_sample = 0; i_sample < buffer.getNumSamples(); i_sample++)
     {
-        channelDataL[i_sample] = (mix * mCqtSampleBuffer[0][i_sample] + (1. - mix) * channelDataL[i_sample]) * master;
-        channelDataR[i_sample] = (mix * mCqtSampleBuffer[1][i_sample] + (1. - mix) * channelDataR[i_sample]) * master;
+        const double wet = mWet.getNextValue();
+        const double dry = mDry.getNextValue();
+        const double master = mMaster.getNextValue();
+        const double outSampleL = (wet * mCqtSampleBuffer[0][i_sample] + dry * static_cast<double>(channelDataL[i_sample])) * master;
+        const double outSampleR = (wet * mCqtSampleBuffer[1][i_sample] + dry * static_cast<double>(channelDataR[i_sample])) * master;
+        channelDataL[i_sample] = static_cast<float>(outSampleL);
+        channelDataR[i_sample] = static_cast<float>(outSampleR);
     }
-
 
     // Spectral display
     unsigned i_channel = 0u;
@@ -314,21 +333,36 @@ void AudioPluginAudioProcessor::setTuning(const double tuning)
     {
         mCqtReverb[i_channel].setTuning(tuning);
     }
+    for(unsigned i_octave = 0u; i_octave < OctaveNumber; i_octave++)
+    {
+        auto octaveBinFreqs = mCqtReverb[0].getOctaveBinFreqs(i_octave);
+        for(unsigned i_tone = 0u; i_tone < BinsPerOctave; i_tone++)
+        {
+            mKernelFreqs[i_octave][i_tone] = octaveBinFreqs[i_tone]; 
+        }
+    }
+    mNewKernelFreqs = true;
 }
 
 void AudioPluginAudioProcessor::setGain(const double gain)
 {
-   *mGainParameter = gain; 
+    *mGainParameter = gain; 
+    const double gainLin = std::pow(10., gain / 20.);
+    mGain.setTargetValue(gainLin);
 }
 
 void AudioPluginAudioProcessor::setMix(const double mix)
 {
    *mMixParameter = mix; 
+   mDry.setTargetValue(std::sqrt(1. - mix));
+   mWet.setTargetValue(std::sqrt(mix));
 }
 
 void AudioPluginAudioProcessor::setMaster(const double master)
 {
-   *mMasterParameter = master; 
+    *mMasterParameter = master; 
+    const double masterLin = std::pow(10., master / 20.);
+    mMaster.setTargetValue(masterLin);
 }
 
 void AudioPluginAudioProcessor::setColour(const double colour)

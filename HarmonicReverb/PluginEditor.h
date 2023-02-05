@@ -3,7 +3,7 @@
 #include "PluginProcessor.h"
 
 #include "../include/gui/OtherLookAndFeel.h"
-#include "../submodules/cqt-analyzer/include/gui/MagnitudesComponent.h"
+#include "../include/gui/SpectralComponent.h"
 
 //==============================================================================
 class AudioPluginAudioProcessorEditor  : public juce::AudioProcessorEditor
@@ -51,7 +51,7 @@ private:
 
     juce::TooltipWindow mFrequencyTooltip;
 
-    MagnitudesComponent<BinsPerOctave, OctaveNumber> mMagnitudesComponent{ processorRef };
+    SpectralComponent<BinsPerOctave, OctaveNumber> mSpectralComponent{ processorRef };
 
     void attackSliderChanged();
     void decaySliderChanged();

@@ -25,6 +25,7 @@ public:
     void processBlock(double* const data, const int nSamples);
 
     const double* getOctaveValues(const int octave){ return mGainsIllustration[octave]; };
+    inline double* getOctaveBinFreqs(const int octave){ return mCqt.getOctaveBinFreqs(octave); };
 
     void setAttack(const double attack);
     void setDecay(const double decay);

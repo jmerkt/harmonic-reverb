@@ -147,9 +147,8 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor (AudioPluginAud
     masterSliderChanged();
 
     // Spectral display
-    addAndMakeVisible(mMagnitudesComponent);
-    mMagnitudesComponent.setRangeMax(10.);
-    mMagnitudesComponent.setRangeMin(-30.);
+    addAndMakeVisible(mSpectralComponent);
+    mSpectralComponent.setRangeMin(-80.);
 
     // Tooltips
     mFrequencyTooltip.setMillisecondsBeforeTipAppears(100);
@@ -195,7 +194,7 @@ void AudioPluginAudioProcessorEditor::resized()
     auto spectrumRect = b;
     spectrumRect.setTop(b.getHeight() * controlYFrac);
     spectrumRect.setBottom(b.getHeight() - b.getHeight() * headingYFrac);
-    mMagnitudesComponent.setBounds(spectrumRect.toNearestIntEdges());
+    mSpectralComponent.setBounds(spectrumRect.toNearestIntEdges());
 
     // Controls
     constexpr size_t N_CONTROLS = 10u;
