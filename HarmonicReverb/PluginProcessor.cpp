@@ -284,18 +284,20 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 void AudioPluginAudioProcessor::setAttack(const double attack)
 {
     *mAttackParameter = attack;
+    const double attackMapped = std::tanh(5. * attack);
     for(unsigned i_channel = 0u; i_channel < ChannelNumber; i_channel++)
     {
-        mCqtReverb[i_channel].setAttack(attack);
+        mCqtReverb[i_channel].setAttack(attackMapped);
     }
 }
 
 void AudioPluginAudioProcessor::setDecay(const double decay)
 {
     *mDecayParameter = decay;
+    const double decayMapped = std::tanh(5. * decay);
     for(unsigned i_channel = 0u; i_channel < ChannelNumber; i_channel++)
     {
-        mCqtReverb[i_channel].setDecay(decay);
+        mCqtReverb[i_channel].setDecay(decayMapped);
     }
 }
 

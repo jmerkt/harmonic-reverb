@@ -9,9 +9,9 @@ constexpr int BlockSize{256};
 constexpr size_t WavetableSize{512u};
 
 // Parameters later
-constexpr double MaxToneThresholdFactor{0.25}; // sparsity
-constexpr double GlobalMaxThresholdFactor{0.1};
-constexpr double OctaveMeanThresholdFactor{2.0}; // sparsity
+constexpr double MaxToneThresholdFactor{0.05}; // sparsity
+constexpr double GlobalMaxThresholdFactor{0.05};
+constexpr double OctaveMeanThresholdFactor{.75}; // sparsity
 
 template <unsigned B, unsigned OctaveNumber>
 class CqtReverb
