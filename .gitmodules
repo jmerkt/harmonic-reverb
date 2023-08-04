@@ -10,3 +10,6 @@
 [submodule "submodules/cqt-analyzer"]
 	path = submodules/cqt-analyzer
 	url = https://github.com/jmerkt/cqt-analyzer.git
+[submodule "submodules/audio-utils"]
+	path = submodules/audio-utils
+	url = https://github.com/jmerkt/audio-utils
