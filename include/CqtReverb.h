@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../submodules/rt-cqt/include/SlidingCqt.h"
-#include "../submodules/audio-utils/include/SmoothedFloat.h"
-#include "../submodules/audio-utils/include/CplxWavetableOscillator.h"
+#include "../submodules/rt-cqt/submodules/audio-utils/include/SmoothedFloat.h"
+#include "../submodules/rt-cqt/submodules/audio-utils/include/CplxWavetableOscillator.h"
 
 using namespace std::complex_literals;
 constexpr int BlockSize{256};
@@ -41,8 +41,8 @@ private:
     // Processing classes and buffers
     Cqt::SlidingCqt<B, OctaveNumber, false> mCqt;
 
-    CircularBuffer<double> mInputBuffer;
-    CircularBuffer<double> mOutputBuffer;
+    audio_utils::CircularBuffer<double> mInputBuffer;
+    audio_utils::CircularBuffer<double> mOutputBuffer;
     std::vector<double> mInputData;
     std::vector<double> mOutputData;
     size_t mInputDataCounter;
@@ -420,7 +420,7 @@ template <unsigned B, unsigned OctaveNumber>
 inline void CqtReverb<B, OctaveNumber>::setColour(const double colour)
 {
     mColour = colour;
-    mColour = Cqt::Clip<double>(mColour, -1., 1.);
+    mColour = audio_utils::Clip<double>(mColour, -1., 1.);
 }
 
 template <unsigned B, unsigned OctaveNumber>

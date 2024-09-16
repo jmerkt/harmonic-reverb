@@ -2,7 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "../include/CqtReverb.h"
-#include "../submodules/audio-utils/include/SmoothedFloat.h"
+#include "../submodules/rt-cqt/submodules/audio-utils/include/SmoothedFloat.h"
 
 constexpr unsigned BinsPerOctave{12};
 constexpr unsigned OctaveNumber{9};
